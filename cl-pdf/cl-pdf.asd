@@ -22,10 +22,10 @@
   (pushnew :uffi cl:*features*)
   (print "UFFI loaded."))
 
-(load (merge-pathnames "iterate/iterate.asd" *load-truename*))
+(load (merge-pathnames "iterate/iterate.asd" *load-pathname*))
 
 #+use-salza-zlib
-(load (merge-pathnames "salza/salza.asd" *load-truename*))
+(load (merge-pathnames "salza/salza.asd" *load-pathname*))
 
 #+clisp (setf *warn-on-floating-point-contagion* nil)
 

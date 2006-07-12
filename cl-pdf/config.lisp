@@ -26,7 +26,7 @@
 ;the cl-pdf base directory
 (defvar *cl-pdf-base-directory*
    (make-pathname :name nil :type nil :version nil
-     :defaults #.(or #-gcl *compile-file-truename* *load-truename*))
+     :defaults #.(or #-gcl *compile-file-pathname* *load-pathname*))
    "The base directory for cl-pdf source and auxiliary data")
 
 ;; The *afm-files-directories* is only for the 14 predefined fonts.
@@ -43,7 +43,7 @@
 
 ;(eval-when (:compile-toplevel :load-toplevel :execute)
 #+use-uffi-zlib
-(defvar *zlib-search-paths* `(,(directory-namestring *load-truename*)
+(defvar *zlib-search-paths* `(,(directory-namestring *load-pathname*)
                               #+lispworks
                               ,(directory-namestring (lw:lisp-image-name))
                               "/usr/local/lib/"
