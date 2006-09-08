@@ -6,7 +6,7 @@
 ;;; An example use of the salza DEFLATE interface functions.
 ;;; 
 ;;; 
-;;; $Id: gzip.lisp,v 1.2 2006/07/27 21:04:12 seibel Exp $
+;;; $Id: gzip.lisp,v 1.3 2006/09/08 20:45:21 layer Exp $
 
 (defpackage :gzip
   (:use :cl :salza-deflate)

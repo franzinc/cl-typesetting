@@ -1,5 +1,5 @@
 ;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
-;;; $Id: hyphenation-fp.lisp,v 1.2 2006/07/27 21:04:12 seibel Exp $
+;;; $Id: hyphenation-fp.lisp,v 1.3 2006/09/08 20:45:21 layer Exp $
 
 ;;; New implementation of TeX algorithms in Common Lisp by Fabrice Popineau
 

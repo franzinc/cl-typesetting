@@ -14,7 +14,7 @@
 ;;; (write-png png "example.png")
 ;;;
 ;;;
-;;; $Id: png.lisp,v 1.2 2006/07/27 21:04:12 seibel Exp $
+;;; $Id: png.lisp,v 1.3 2006/09/08 20:45:21 layer Exp $
 
 (defpackage :png
   (:use :cl :salza :salza-deflate)

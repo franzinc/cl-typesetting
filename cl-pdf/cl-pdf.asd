@@ -22,10 +22,17 @@
   (pushnew :uffi cl:*features*)
   (print "UFFI loaded."))
 
-(load (merge-pathnames "iterate/iterate.asd" *load-pathname*))
+(flet ((load-if (it)
+	 (when (probe-file it)
+	   (load it))))
+  (or (load-if (merge-pathnames "iterate/iterate.asd" *load-pathname*))
+      (load-if (merge-pathnames "iterate/iterate.asd" *load-truename*))
+      (find-system 'iterate))
 
-#+use-salza-zlib
-(load (merge-pathnames "salza/salza.asd" *load-pathname*))
+  #+use-salza-zlib
+  (or (load-if (merge-pathnames "salza/salza.asd" *load-pathname*))
+      (load-if (merge-pathnames "salza/salza.asd" *load-truename*))
+      (find-system 'salza)))
 
 #+clisp (setf *warn-on-floating-point-contagion* nil)
 

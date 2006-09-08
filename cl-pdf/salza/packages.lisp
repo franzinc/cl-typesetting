@@ -29,7 +29,7 @@
 ;;; NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 ;;; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ;;; 
-;;; $Id: packages.lisp,v 1.2 2006/07/27 21:04:12 seibel Exp $
+;;; $Id: packages.lisp,v 1.3 2006/09/08 20:45:21 layer Exp $
 
 (in-package :cl)
 
