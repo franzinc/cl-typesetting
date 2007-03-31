@@ -8,22 +8,20 @@
 
 (defparameter +pdf-header+ "%PDF-1.4")
 
-(defvar *document* nil)
-(defvar *outlines-stack* nil)
-(defvar *root-page* nil)
-(defvar *page* nil)
-(defvar *page-number* nil)
-(defvar *page-stream* nil)
-(defvar *pdf-stream* nil)
-(defvar *xrefs* nil)
-(defvar *name-counter* 100)
+(defvar *document*)
+(defvar *outlines-stack*)
+(defvar *root-page*)
+(defvar *page*)
+(defvar *page-number*)
+(defvar *page-stream*)
+(defvar *pdf-stream*)
+(defvar *xrefs*)
+(defvar *name-counter*)
 
 (defun gen-name (prefix)
   (format nil "~a~d" prefix (incf *name-counter*)))
 
 (defgeneric make-dictionary (thing &key &allow-other-keys))
-
-(defgeneric font-descriptor (font-metrics &key embed errorp))
 
 (defclass dictionary ()
   ((dict-values :accessor dict-values :initform nil :initarg :dict-values)))
@@ -44,7 +42,7 @@
   ((content :accessor content :initform "" :initarg :content)
    (no-compression :accessor no-compression :initarg :no-compression :initform nil)))
 
-(defmethod initialize-instance :after ((obj pdf-stream) &rest init-options &key empty &allow-other-keys)
+(defmethod initialize-instance :after ((obj pdf-stream) &key empty &allow-other-keys)
   (unless empty
     (add-dict-value obj "/Length" 
 		    #'(lambda () 
@@ -79,11 +77,10 @@
    (keywords :accessor keywords :initarg :keywords :initform nil)
    (subject :accessor subject :initarg :subject :initform nil)))
 
-(defmethod initialize-instance :after ((doc document) &rest init-options
+(defmethod initialize-instance :after ((doc document)
 				       &key (creator "")
 				       empty author title subject keywords
 				       &allow-other-keys)
-  (declare (ignore init-options))
   (unless empty
     (let ((*document* doc))
       (setf (objects doc) (make-array 10 :fill-pointer 0 :adjustable t))
@@ -118,7 +115,7 @@
    (gen-number :accessor gen-number :initform 0 :initarg :gen-number)
    (content :accessor content :initform nil :initarg :content)))
 
-(defmethod initialize-instance :after ((obj indirect-object) &rest init-options
+(defmethod initialize-instance :after ((obj indirect-object)
 				       &key no-link &allow-other-keys)
   (unless no-link
     (vector-push-extend obj (objects *document*))))
@@ -130,7 +127,7 @@
 (defclass page-node (indirect-object)
   ((pages :accessor pages :initform (make-array 1 :fill-pointer 0 :adjustable t))))
 
-(defmethod initialize-instance :after ((obj page-node) &rest init-options &key no-link &allow-other-keys)
+(defmethod initialize-instance :after ((obj page-node) &key no-link &allow-other-keys)
   (when (and *root-page* (not no-link))
     (vector-push-extend obj (pages *root-page*)))
   (setf (content obj) (make-instance 'dictionary
@@ -151,7 +148,7 @@
    (content-stream :accessor content-stream)
    ))
 
-(defmethod initialize-instance :after ((page page) &rest init-options
+(defmethod initialize-instance :after ((page page)
 				       &key no-link (rotate 0) &allow-other-keys)
   (when (and *root-page* (not no-link))
     (incf *page-number*)
@@ -197,8 +194,8 @@
   ((title :accessor title :initarg :title :initform nil)
    (reference :accessor reference :initform nil :initarg :reference)
    (sub-levels :accessor sub-levels :initform nil)
-   (prev-outline   :accessor prev-outline   :initform nil)
-   (next-outline   :accessor next-outline   :initform nil)))
+   (prev-outline :accessor prev-outline :initform nil)
+   (next-outline :accessor next-outline :initform nil)))
 
 (defun enter-outline-level (title ref-name)
   (let ((outline (make-instance 'outline :title title :reference (get-named-reference ref-name)))
@@ -213,9 +210,36 @@
   #+lispworks `(lw:string-append ,@args)
   #-lispworks `(concatenate 'string ,@args))
 
-(defun pdf-string (obj)
+(defun pdf-string (obj &key (unicode :default))
  ;;; Used to embrace a pdf string used in places other than content streams,
-  ;; e.g. annotations.
+  ;; e.g. titles, annotations etc.
+  ;; Args: unicode  If true or defaults to true, the PDF text string is encoded in Unicode
+  ;;	   lang ?
+  ;; Q: Rename or create separate pdf-text-string?
+  (let ((string (if (stringp obj) obj (princ-to-string obj))))
+    (when (eq unicode :default)
+      (setq unicode (notevery #+lispworks #'lw:base-char-p
+                              #-lispworks (lambda (char) (<= (char-code char) 255))
+                              string)))
+    (with-output-to-string (stream nil :element-type 'base-char)
+      (write-char #\( stream)
+      (when unicode			; write the Unicode byte order marker U+FEFF
+        (write-char #.(code-char 254) stream) (write-char #.(code-char 255) stream))
+      (loop for char across string
+            for code = (char-code char)
+            if unicode
+            do (write-char (code-char (ldb (byte 8 8) code)) stream)	; hi
+               (write-char (code-char (ldb (byte 8 0) code)) stream)	; lo
+            else if (> code 255)
+            do (write-char (code-char (ldb (byte 8 0) code)) stream)	; lo
+            else do (case char ((#\( #\) #\\)
+                                (write-char #\\ stream)))
+                      (write-char char stream))
+      (write-char #\) stream))))
+
+#+old-pdf-encoding
+(defun pdf-string (obj)
+ "Used to embrace a pdf string used in places other than content streams, e.g. annotations."
   (let ((string (if (stringp obj) obj (princ-to-string obj))))
     (with-output-to-string (stream nil #-cmu :element-type #-cmu (array-element-type string))
       (write-char #\( stream)
@@ -261,9 +285,9 @@
     (add-dict-value (content (catalog document)) "/Outlines" (outline-root document))))
 
 (defun pdf-name (obj &optional (prefix #\/))
-;; Helper (akin to pdf-string) to escape non-alphanumeric characters in PDF names
-;; by writing 2-digit hexadecimal code, preceded by the number sign character (#).
-;; CAUTION: PDF names are case-sensitive!
+  "Helper (akin to pdf-string) to escape non-alphanumeric characters in PDF names
+   by writing 2-digit hexadecimal code, preceded by the number sign character (#).
+   CAUTION: PDF names are case-sensitive!"
   (let ((string (if (stringp obj)
                     (if (and prefix (char= (schar obj 0) prefix))
                         (return-from pdf-name obj) ; PDF-ready
@@ -280,8 +304,10 @@
               (format stream "#~2,'0x" (char-code char))))))))
 
 (defmacro enforce-/ (&rest names)
-;;; Verify and prefix each name by / unless it is PDF-ready.
-  `(setf ,@(loop for name in names collect name collect `(pdf-name ,name))))
+  "Verify and prefix each name by / unless it is PDF-ready."
+  `(setf ,@(loop for name in names
+                 collect name
+                 collect `(pdf-name ,name))))
 
 (defun add-/ (name)
   (concatenate 'string "/" name))
@@ -290,7 +316,6 @@
   ((encoding :accessor encoding :initarg :encoding)))
 
 (defmethod initialize-instance :after ((encoding-object encoding-object)
-                                       &rest init-options
                                        &key encoding &allow-other-keys)
   (setf (content encoding-object) (make-dictionary encoding)))
 
@@ -305,11 +330,11 @@
   ((name :accessor name :initform (gen-name "/CLF") :initarg :name)
    (font :accessor font :initarg :font)))
 
-(defmethod initialize-instance :after ((font-object font-object) &rest initargs
+(defmethod initialize-instance :after ((font-object font-object)
                                        &key font (embed *embed-fonts*)
                                        &allow-other-keys)
   (setf (content font-object) (make-dictionary (font-metrics font)
-                                               :font font  :embed embed)))
+                                               :font font :embed embed)))
 
 (defun find-font-object (font &key (embed :default))
   (let ((font-object (cdr (assoc font (fonts *document*))))) 
@@ -329,7 +354,7 @@
 (defclass gstate-object (indirect-object)
   ((name :accessor name :initform (gen-name "/GS") :initarg :name)))
 
-(defmethod initialize-instance :after ((gstate-object gstate-object) &rest init-options &key gstate &allow-other-keys)
+(defmethod initialize-instance :after ((gstate-object gstate-object) &key gstate &allow-other-keys)
   (setf (content gstate-object) (make-instance 'dictionary :dict-values '(("/Type" . "/ExtGState"))))
   (loop for (name value) on gstate by #'cddr
 	do (add-dict-value (content gstate-object) (format nil "/~a" name) value)))
@@ -354,11 +379,9 @@
    (width :accessor width :initarg :width)
    (height :accessor height :initarg :height)))
 
-(defmethod initialize-instance :after ((image image) &rest init-options &key
-				       bits width height 
-                                       (filter "ASCIIHexDecode") decode-parms
-				       (color-space "DeviceRGB")(bits-per-color 8)
-                                       mask decode
+(defmethod initialize-instance :after ((image image) &key
+				       bits width height (filter "ASCIIHexDecode") decode-parms
+				       (color-space "DeviceRGB") (bits-per-color 8) mask decode
 				       no-compression
 				       &allow-other-keys)
  ;;; Args: color-space - can be an array!
@@ -387,7 +410,7 @@
 (defclass annotation (indirect-object)
   ())
 
-(defmethod initialize-instance :after ((annotation annotation) &rest init-options &key
+(defmethod initialize-instance :after ((annotation annotation) &key
 				       rect type (border #(0 0 0))
 				       &allow-other-keys)
   (enforce-/ type)
@@ -400,10 +423,8 @@
 (defclass annotation2 (indirect-object)
   ())
 
-(defmethod initialize-instance :after ((annotation annotation2) &rest init-options &key
-				       rect type text
+(defmethod initialize-instance :after ((annotation annotation2) &key rect text
 				       &allow-other-keys)
-  (enforce-/ type)
   (vector-push-extend annotation (annotations *page*))
   (setf (content annotation)
 	(make-instance 'dictionary
@@ -425,6 +446,17 @@
 	(write-char #\Newline *pdf-stream*))
   (write-line " >>" *pdf-stream*))
 
+(defmethod write-stream-content ((content string))
+  ;; Args: content Base string, may include
+  ;;	   - either one-byte codes (already converted to external format if needed)
+  ;;	   - or Unicode two-byte character codes (big-endian CIDs)
+  #+pdf-binary
+  (loop for char across content
+        do (write-byte (ldb (byte 8 0) (char-code char)) *pdf-stream*))
+  #-pdf-binary
+  (write-sequence obj *pdf-stream*))
+
+#+old-pdf-encoding
 (defmethod write-stream-content ((obj string))
   (write-sequence obj *pdf-stream*))
 
@@ -511,7 +543,7 @@
      (with-standard-io-syntax
        (process-outlines document)
        (vector-push-extend "0000000000 65535 f " *xrefs*)
-       (write-line +pdf-header+ s)
+       (write-line +pdf-header+ *pdf-stream*)
        (loop for obj across (objects document)
 	     for first = t then nil
 	     if obj do (write-object obj t)
@@ -528,21 +560,27 @@
        (format s "~%>>~%startxref~%~d~%%%EOF~%" startxref))))
 
 (defmethod write-document ((filename pathname) &optional (document *document*))
-   (with-open-file (s filename :direction :output :if-exists :supersede
-		      :external-format +external-format+)
-     (write-document s document)))
+   (with-open-file (stream filename
+                           :direction :output :if-exists :supersede
+                           :element-type #+pdf-binary '(unsigned-byte 8) 
+                                         #-pdf-binary 'base-char
+                           :external-format +external-format+)
+     (write-document stream document)
+     filename))				; indicate that operation succeeded
 
 (defmethod write-document ((filename string) &optional (document *document*))
   (write-document (pathname filename) document))
 
 (defmacro with-document ((&rest args &key (max-number-of-pages '*max-number-of-pages*) &allow-other-keys)
 			 &body body)
-  `(let* ((*document* (make-instance 'document ,@args))
+  `(let* ((*root-page* nil)
+          (*document* (make-instance 'document ,@args))
 	  (*outlines-stack* (list (outline-root *document*)))
-	  (*root-page* (root-page *document*))
 	  (*page* nil)
 	  (*page-number* 0)
+          (*name-counter* 100)
 	  (*max-number-of-pages* ,max-number-of-pages))
+    (setf *root-page* (root-page *document*))
     (catch 'max-number-of-pages-reached
       ,@body)))
 

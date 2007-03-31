@@ -1,0 +1,74 @@
+*******************************************************************************
+Instructions:
+ * PLEASE leave these instructions at the top of the file
+ * if you have ANY USER VISIBLE CHANGES IN THIS COMMIT, please add a
+   description of them to the file RELNOTES
+ * if there is a release marker (search for "1.1 release" to see one) and
+   you have changes for that release, please put your entry AFTER the
+   release marker
+Thank you. *** End of Instructions
+*******************************************************************************
+
+2007-03-31  Gary King <gwking@metabang.com>
+
+	Lots of little fixes to make CL-PDF and CL-Typesetting 
+	work in modern Common Lisp and compile with no warning
+	in Allegro. The code checked in here was the head of 
+	CL-PDF and CL-Typesetting as of January.
+
+	* (NEW) Changelog
+	
+	* cl-pdf/bar-codes.lisp
+	* cl-pdf/chart.lisp
+	* cl-pdf/cl-pdf.asd
+	* cl-pdf/config.lisp
+	* cl-pdf/defpackage.lisp
+	* cl-pdf/encodings.lisp
+	* cl-pdf/font-metrics.lisp
+	* cl-pdf/font.lisp
+	* cl-pdf/init.lisp
+	* cl-pdf/pdf-base.lisp
+	* cl-pdf/pdf-geom.lisp
+	* cl-pdf/pdf-parser.lisp
+	* cl-pdf/pdf-template.lisp
+	* cl-pdf/pdf.lisp
+	* cl-pdf/png.lisp
+	* cl-pdf/t1-font.lisp
+	* cl-pdf/text.lisp
+	* cl-pdf/to-do.txt
+	* cl-pdf/ttu-font.lisp
+	* cl-pdf/x11-colors.lisp
+	* cl-pdf/zlib.lisp
+	* cl-pdf/examples/examples.lisp
+	* cl-pdf/iterate/package.lisp
+	* cl-pdf/salza/compressor.lisp
+	* cl-pdf/salza/deflate-stream-interface.lisp
+	* cl-pdf/salza/deflate-stream.lisp
+	* cl-pdf/salza/di-huffman.lisp
+	* cl-pdf/salza/fixhash.lisp
+	* cl-pdf/salza/huffman.lisp
+	* cl-pdf/salza/octet-replace.lisp
+	* cl-pdf/salza/packages.lisp
+	* cl-pdf/salza/salza.asd
+	* cl-pdf/salza/types.lisp
+	* cl-pdf/salza/zlib.lisp
+	* cl-pdf/salza/examples/gzip.lisp
+	* cl-pdf/salza/examples/png.lisp
+	* cl-typesetting/boxes-fn.lisp
+	* cl-typesetting/boxes.lisp
+	* cl-typesetting/cl-typesetting.asd
+	* cl-typesetting/defpackage.lisp
+	* cl-typesetting/graph.lisp
+	* cl-typesetting/graphics.lisp
+	* cl-typesetting/hyphenation-fp.lisp
+	* cl-typesetting/hyphenation.lisp
+	* cl-typesetting/kw-extensions.lisp
+	* cl-typesetting/layout.lisp
+	* cl-typesetting/math.lisp
+	* cl-typesetting/pprint.lisp
+	* cl-typesetting/references.lisp
+	* cl-typesetting/stroke.lisp
+	* cl-typesetting/tables.lisp
+	* cl-typesetting/test.lisp
+	* cl-typesetting/top-level.lisp
+	* cl-typesetting/typo.lisp

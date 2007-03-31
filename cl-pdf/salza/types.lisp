@@ -29,7 +29,7 @@
 ;;; NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 ;;; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ;;; 
-;;; $Id: types.lisp,v 1.3 2006/09/08 20:45:21 layer Exp $
+;;; $Id: types.lisp,v 1.4 2007/03/31 17:10:48 gwking Exp $
 
 (in-package :salza-types)
 

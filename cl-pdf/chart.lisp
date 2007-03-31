@@ -2,7 +2,7 @@
 ;;; You can reach me at marc.battyani@fractalconcept.com or marc@battyani.net
 ;;; The homepage of cl-pdf is here: http://www.fractalconcept.com/asp/html/cl-pdf.html
 
-(in-package pdf)
+(in-package #:pdf)
 
 ;;WARNING this part of cl-pdf is an alpha version. Use with care!
 
@@ -89,7 +89,7 @@
   (height axis))
 
 (defmethod draw-object (obj)
-  )
+  (declare (ignore obj)))
 
 (defun nice-number (n approx integer-p)
   (let* ((n10 (expt 10 (floor (log n 10))))
@@ -303,14 +303,14 @@
 		for bx from gx by group-width do
 		(loop for y = 0.0 then (+ y dy)
 		      for value in values
-		      for (name color) in (labels&colors obj)
+		      for (nil color) in (labels&colors obj)
 		      for dy = (* value scale) do
 		      (apply #'set-rgb-fill color)
 		      (basic-rect bx y bar-width dy)
 		      (fill-and-stroke)))
 	  (loop for serie in (series obj)
 		for gx from (* 0.5 spacing) by bar-width
-		for (name color) in (labels&colors obj) do
+		for (nil color) in (labels&colors obj) do
 		(apply #'set-rgb-fill color)
 		(loop for value in serie
 		      for dy = (* (- value min-value) scale)
@@ -351,7 +351,7 @@
       (apply #'set-rgb-fill (background-color obj))
       (fill-and-stroke)
       (loop for angle in angles
-	    for (name color) in (labels&colors obj)
+	    for (nil color) in (labels&colors obj)
 	    for start = 0 then end
 	    for end = (+ start angle) do
 	    (apply #'set-rgb-fill color)
@@ -471,9 +471,14 @@
 	   (move-to 0 tick-y)
 	   (line-to width tick-y)
 	   (stroke))
+      (loop for tick-x across (ticks-positions (x-axis obj)) do
+	   (move-to tick-x 0)
+	   (line-to tick-x height)
+	   (stroke))
       (set-line-width (line-width obj))
+      (set-line-join 2)
       (loop for serie in (series obj)
-	    for (name color) in (labels&colors obj) do
+	    for (nil color) in (labels&colors obj) do
 	   (apply #'set-rgb-stroke color)
 	   (apply #'set-rgb-fill color)
 	   (let ((points '())
@@ -486,8 +491,8 @@
 		      (progn
 			(push (list x y) points)
 			(unless (zerop (point-radius obj))
-			  (circle x y (point-radius obj)))
-			(fill-and-stroke))
+			  (circle x y (point-radius obj))
+                          (fill-and-stroke)))
 		      (when points
 			(push points all-points)
 			(setf points '()))))

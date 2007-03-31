@@ -4,7 +4,7 @@
 
 ;;; Thanks to Dmitri Ivanov for the splittable tables!
 
-(in-package typeset)
+(in-package #:typeset)
 
 (defvar *table* nil)
 
@@ -201,6 +201,7 @@
 		       +epsilon+))))
 
 (defmethod v-split ((table table) dx dy)
+  (declare (ignore dx))
   "Factor out rows that fit and return a split table + the table."
   ;; Treat unsplittable rows as a single unit - for this purpose,
   ;; group the rows list into the following form:
@@ -316,7 +317,8 @@
                                               (+ width full-size-offset)
                                               (- (+ height full-size-offset)))
                               (pdf:fill-path)))
-                          (unless (or (zerop border) (null cell-border)) ; next, draw table border
+ 		          ;; Next, draw table border if not suppressed
+			  (unless (or (zerop border) (null cell-border))
                             (pdf:set-line-width border)
                             (pdf:set-gray-stroke 0)
                             (pdf:basic-rect (- half-border) half-border ;0 0

@@ -1,7 +1,7 @@
 ;;; Klaus Weidner extensions
 ;;; This stuff will be dispatched into better locations later.
 
-(in-package typeset)
+(in-package #:typeset)
 
 ;; user-configurable default settings
 
@@ -235,6 +235,7 @@ text-style  Style used for printing the item body text."
   ((type :accessor mark-type :initform nil :initarg :type)))
 
 (defmethod stroke ((mark change-mark) x y)
+  (declare (ignore x))  
   ;; "stroking" change marks just records their positions for later
   ;; rendering in the postprocessing hook
   (cond ((eq :start-insert (mark-type mark))
@@ -442,18 +443,21 @@ a list of recursive typesetting commands. It gets eval'ed here to typeset it."
 	(pdf:draw-text "D r a f t"))))
 
 (defun decoration-random-background (box x y dx dy)
+  (declare (ignore box))
   (pdf:with-saved-state
     (pdf:set-rgb-fill (random 1.0) (random 1.0) (random 1.0))
     (pdf:basic-rect x y dx dy)
     (pdf:fill-path)))
 
 (defun decoration-green-background (box x y dx dy)
+  (declare (ignore box dy))
   (pdf:with-saved-state
     (pdf:set-rgb-fill 0.7 1.0 0.7)
     (pdf:basic-rect x (- y 2) dx (- 1 *font-size*))
     (pdf:fill-path)))
 
 (defun decoration-circles (box x y dx dy)
+  (declare (ignore box))
   (pdf:with-saved-state
     (pdf:set-color-stroke #xff33cc)
     (pdf:set-line-width 0.3)
@@ -461,6 +465,7 @@ a list of recursive typesetting commands. It gets eval'ed here to typeset it."
     (pdf:stroke)))
 
 (defun decoration-gray-box (box x y dx dy)
+  (declare (ignore box))
   (pdf:with-saved-state
     (pdf:set-gray-stroke 0.5)
     (pdf:set-line-width 0.5)
@@ -468,6 +473,7 @@ a list of recursive typesetting commands. It gets eval'ed here to typeset it."
     (pdf:stroke)))
 
 (defun decoration-underline (box x y dx dy)
+  (declare (ignore box))
   (pdf:with-saved-state
     (pdf:set-gray-stroke 0)
     (pdf:set-line-width (* 0.06 *font-size*))
@@ -476,6 +482,7 @@ a list of recursive typesetting commands. It gets eval'ed here to typeset it."
     (pdf:stroke)))
 
 (defun decoration-strikethrough (box x y dx dy)
+  (declare (ignore box))
   (pdf:with-saved-state
     (pdf:set-color-stroke :red)
     (pdf:set-line-width (* 0.06 *font-size*))
@@ -484,6 +491,7 @@ a list of recursive typesetting commands. It gets eval'ed here to typeset it."
     (pdf:stroke)))
 
 (defun decoration-crosshatch (box x y dx dy)
+  (declare (ignore box))
   (pdf:with-saved-state
     (pdf:set-color-stroke :black)
     (pdf:set-line-width 0.5)
@@ -492,6 +500,7 @@ a list of recursive typesetting commands. It gets eval'ed here to typeset it."
     (pdf:stroke)))
 
 (defun decoration-nil (box x y dx dy)
+  (declare (ignore box x y dx dy))
   (print "Called nil decoration.")
   nil)
 

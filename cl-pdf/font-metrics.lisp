@@ -2,7 +2,7 @@
 ;;; You can reach me at marc.battyani@fractalconcept.com or marc@battyani.net
 ;;; The homepage of cl-pdf is here: http://www.fractalconcept.com/asp/html/cl-pdf.html
 
-(in-package pdf)
+(in-package #:pdf)
 
 ;;Many thanks to Alexey Dejneka (adejneka@comail.ru) who finished the parsing of the AFM files.
 
@@ -293,7 +293,7 @@
     (with-open-file (s filename :direction :input :external-format +external-format+)
       (setf font-metrics (afm-font-metrics s font-metrics-class)))
     (setf void-char (gethash "VoidCharacter" (characters font-metrics)))
-    (iter (for (name char-metrics) in-hashtable (characters font-metrics))
+    (iter (for (nil char-metrics) in-hashtable (characters font-metrics))
           (for gid = (index char-metrics))
           (for code = (code char-metrics))
           (when (and (<= 0 code #xfffe))
@@ -307,7 +307,7 @@
 	    (vector-push-extend (vector (round (* 1000 (width char-metrics)))) (cid-widths font-metrics))))
     (setf encoding-vector (make-array (1+ max-code) :initial-element void-char)
           pdf-widths (make-array (1+ max-code) :initial-element 0))
-    (iter (for (name char-metrics) in-hashtable (characters font-metrics))
+    (iter (for (nil char-metrics) in-hashtable (characters font-metrics))
           (for code = (code char-metrics))
           (when (<= min-code code max-code)
             (setf (aref encoding-vector code) char-metrics
@@ -326,8 +326,8 @@
   (declare (ignore font-metrics))
   "Type1")
 
-(defmethod font-descriptor (font-metrics &key embed (errorp nil))
-  (declare (ignore font-metrics embed))
+(defmethod font-descriptor (font-metrics &key (errorp nil) &allow-other-keys)
+  (declare (ignore font-metrics))
   (if errorp
       (error "Generic fonts do not have descriptors.")
       nil))
@@ -349,6 +349,20 @@
               ("/Widths" . ,(pdf-widths font))
               ("/FontDescriptor" . ,font-descriptor))) )) ))
 
+
+(defun extract-font-metrics-encoding (font-metrics)
+ ;; Make extract-font-metrics-encoding generic?
+  (let ((encoding (or (get-encoding (encoding-scheme font-metrics))
+		      (get-encoding (font-name font-metrics)))))
+    (if encoding
+	encoding
+	(make-instance 'single-byte-encoding :name (font-name font-metrics)
+		       :standard-encoding nil
+		       :char-names (map 'vector #'(lambda (char)
+						    (and char (name char)))
+					(encoding-vector font-metrics))))))
+
+#+old-pdf-encoding
 (defun extract-font-metrics-encoding (font-metrics)
   (let ((encoding (or (get-encoding (encoding-scheme font-metrics))
 		      (get-encoding (font-name font-metrics)))))

@@ -29,7 +29,7 @@
 ;;; NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 ;;; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ;;; 
-;;; $Id: di-huffman.lisp,v 1.3 2006/09/08 20:45:21 layer Exp $
+;;; $Id: di-huffman.lisp,v 1.4 2007/03/31 17:10:48 gwking Exp $
 
 ;;; DEFLATE uses special Huffman codes to indicate that there is extra
 ;;; literal data after the code. The WRITE-LITERAL, WRITE-LENGTH, and
@@ -165,6 +165,7 @@ the upper five bits and the value of the code in the lower 23.")
 
   (defun initialize-huffman (&optional force)
    ;;; Initialize distance and temporary tables at run time
+    ;; Called by: make-deflate-stream
     (when (and %initialized% (not force))
       (return-from initialize-huffman))
 

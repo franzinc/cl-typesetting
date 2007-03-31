@@ -1,5 +1,5 @@
 ;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
-;;; $Id: hyphenation-fp.lisp,v 1.3 2006/09/08 20:45:21 layer Exp $
+;;; $Id: hyphenation-fp.lisp,v 1.4 2007/03/31 17:10:48 gwking Exp $
 
 ;;; New implementation of TeX algorithms in Common Lisp by Fabrice Popineau
 
@@ -21,7 +21,7 @@
 
 (defvar *cl-typesetting-base-directory*
    (make-pathname :name nil :type nil :version nil
-     :defaults #.(or #-gcl *compile-file-pathname* *load-pathname*))
+     :defaults #.(or #-gcl *compile-file-truename* *load-truename*))
    "The base directory for cl-typesetting source and auxiliary data")
 
 (defvar *hyphen-patterns-directory*
@@ -53,9 +53,11 @@
   )
 
 (defmethod (setf pattern-trie) (value hyphen-trie)
+  (declare (ignore hyphen-trie))
   value)
 
 (defmethod (setf exception-trie) (value hyphen-trie)
+  (declare (ignore hyphen-trie))
   value)
 
 (defvar *left-hyphen-minimum* 2

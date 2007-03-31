@@ -2,7 +2,7 @@
 ;;; You can reach me at marc.battyani@fractalconcept.com or marc@battyani.net
 ;;; The homepage of cl-typesetting is here: http://www.fractalconcept.com/asp/html/cl-typesetting.html
 
-(in-package typeset)
+(in-package #:typeset)
 
 (defclass hyphen-box ()
   ((cost :accessor cost :initform 0 :initarg :cost)
@@ -15,6 +15,7 @@
   box)
 
 (defmethod cut-point-p (box)
+  (declare (ignore box))
   nil)
 
 (defmethod cut-point-p ((box (eql :eol)))
@@ -170,6 +171,7 @@
       (return-lines))))
 
 (defmethod do-layout (box)
+  (declare (ignore box))
   )
 
 (defmethod do-layout ((hbox hbox))
@@ -234,7 +236,7 @@
 	  boxes)))
 
 (defun boxes-right-trim (boxes)
-  (let ((stop  (position-if-not #'trimmable-white-space-p boxes :from-end t)))
+  (let ((stop  (position-if-not #'trimmable-p boxes :from-end t)))
     (when stop
       (incf stop)
       (if (< stop (length boxes))

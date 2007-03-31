@@ -2,7 +2,7 @@
 ;;; You can reach me at marc.battyani@fractalconcept.com or marc@battyani.net
 ;;; The homepage of cl-pdf is here: http://www.fractalconcept.com/asp/html/cl-pdf.html
 
-(in-package pdf)
+(in-package #:pdf)
 
 ;;; This file contains some special variables which need to be set
 ;;; depending on your Lisp implementation/OS/installation.
@@ -23,17 +23,27 @@
 (defvar *compress-streams* nil
   "Enables the internal streams compression by zlib")
 
+(defvar *embed-fonts* :default
+  "t, nil, or :default (let make-font-dictionary and font-descriptor decide for themselves)")
+
+(defvar *compress-fonts* t "nil or decode filter designator")
+
 ;the cl-pdf base directory
 (defvar *cl-pdf-base-directory*
    (make-pathname :name nil :type nil :version nil
-     :defaults #.(or #-gcl *compile-file-pathname* *load-pathname*))
+     :defaults #.(or #-gcl *compile-file-truename* *load-truename*))
    "The base directory for cl-pdf source and auxiliary data")
 
 ;; The *afm-files-directories* is only for the 14 predefined fonts.
 ;; other fonts must have their afm files read only when they are loaded
+;; Rationale for redefinition:
+;;  Neither of the versions of search-for-file can search the original value of
+;;  *afm-files-directories* (#P"cl-pdf/afm/*.afm") as it contains wildcards!
 (defparameter *afm-files-directories*
-  (list (merge-pathnames #P"afm/*.afm" *cl-pdf-base-directory*))
-  "The directory containing the Adobe Font Metrics files for the 14 predefined fonts")
+  (list (merge-pathnames #P"afm/" *cl-pdf-base-directory*))
+  "The list of directories containing the Adobe Font Metrics and other font files.
+ Can be expanded by additionally loaded modules.")
+
 
 ;; define the :pdf-binary feature if your Lisp implementation accepts
 ;; to write binary sequences to character streams
@@ -43,7 +53,7 @@
 
 ;(eval-when (:compile-toplevel :load-toplevel :execute)
 #+use-uffi-zlib
-(defvar *zlib-search-paths* `(,(directory-namestring *load-pathname*)
+(defvar *zlib-search-paths* `(,(directory-namestring *load-truename*)
                               #+lispworks
                               ,(directory-namestring (lw:lisp-image-name))
                               "/usr/local/lib/"
